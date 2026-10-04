@@ -1,2 +1,0 @@
-import { describe, expect, it } from 'vitest'; import { PLAN_LIMITS, PLAN_FEATURES } from '../constants/plans';
-describe('PLAN_LIMITS',()=>{it('mantém limites Free e Pro centralizados',()=>{expect(PLAN_LIMITS.free.activeListings).toBe(5); expect(PLAN_LIMITS.pro.activeListings).toBe(50); expect(PLAN_LIMITS.pro.callDurationMinutes).toBeGreaterThan(PLAN_LIMITS.free.callDurationMinutes);}); it('expõe benefícios dos dois planos',()=>{expect(PLAN_FEATURES.free.length).toBeGreaterThan(3); expect(PLAN_FEATURES.pro.join(' ')).toContain('PRO');});});

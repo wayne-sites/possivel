@@ -1,36 +1,64 @@
 import { useEffect } from 'react';
-import { Stack } from 'expo-router';
+import { Stack, useRouter } from 'expo-router';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { StatusBar } from 'expo-status-bar';
 import { supabase } from '@/lib/supabase';
+import { getProfile } from '@/services/app';
 import { useAuthStore } from '@/stores/auth';
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: { staleTime: 15_000, retry: 1, refetchOnReconnect: true },
+    mutations: { retry: 0 },
+  },
+});
 
 function AuthBootstrap() {
+  const router = useRouter();
   const setSession = useAuthStore((state) => state.setSession);
+  const setProfile = useAuthStore((state) => state.setProfile);
   const setInitialized = useAuthStore((state) => state.setInitialized);
 
   useEffect(() => {
-    let mounted = true;
+    let active = true;
 
-    supabase.auth.getSession().then(({ data }) => {
-      if (!mounted) return;
-      setSession(data.session);
+    async function applySession(session: Parameters<typeof setSession>[0]) {
+      if (!active) return;
+      setSession(session);
+
+      if (session?.user.id) {
+        try {
+          setProfile(await getProfile(session.user.id));
+        } catch (error) {
+          console.warn('profile bootstrap:', error);
+          setProfile(null);
+        }
+      } else {
+        setProfile(null);
+      }
+
       setInitialized(true);
+    }
+
+    void supabase.auth.getSession().then(({ data, error }) => {
+      if (error) {
+        console.warn('session bootstrap:', error);
+        setInitialized(true);
+        return;
+      }
+      void applySession(data.session);
     });
 
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      setInitialized(true);
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      void applySession(session);
+      if (event === 'PASSWORD_RECOVERY') router.replace('/(auth)/reset-password');
     });
 
     return () => {
-      mounted = false;
+      active = false;
       subscription.unsubscribe();
     };
-  }, [setInitialized, setSession]);
+  }, [router, setInitialized, setProfile, setSession]);
 
   return null;
 }
@@ -38,20 +66,9 @@ function AuthBootstrap() {
 export default function RootLayout() {
   return (
     <QueryClientProvider client={queryClient}>
+      <StatusBar style="dark" />
       <AuthBootstrap />
-      <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="index" />
-        <Stack.Screen name="(auth)" />
-        <Stack.Screen name="(tabs)" />
-        <Stack.Screen name="post" />
-        <Stack.Screen name="listing" />
-        <Stack.Screen name="project" />
-        <Stack.Screen name="chat" />
-        <Stack.Screen name="call" />
-        <Stack.Screen name="subscription" />
-        <Stack.Screen name="settings" />
-        <Stack.Screen name="report" />
-      </Stack>
+      <Stack screenOptions={{ headerShown: false, animation: 'slide_from_right' }} />
     </QueryClientProvider>
   );
 }

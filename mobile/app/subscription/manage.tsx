@@ -1,2 +1,0 @@
-import { Text } from 'react-native'; import { useQuery } from '@tanstack/react-query'; import { Button, Card, Screen, s } from '@/components/ui'; import { cancelSubscription, getSubscription } from '@/services/subscription';
-export default function Manage(){const q=useQuery({queryKey:['subscription'],queryFn:getSubscription}); return <Screen><Card><Text style={s.title}>Gerenciar assinatura</Text><Text>{JSON.stringify(q.data)}</Text><Button title="Cancelar assinatura" variant="danger" onPress={async()=>{await cancelSubscription(); q.refetch();}}/></Card></Screen>}

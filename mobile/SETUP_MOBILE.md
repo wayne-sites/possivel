@@ -1,8 +1,20 @@
-# Setup Mobile
+# Preparar e testar o aplicativo
 
-1. Copie `.env.example` para `.env`.
-2. Preencha `EXPO_PUBLIC_SUPABASE_URL`, `EXPO_PUBLIC_SUPABASE_ANON_KEY`, `EXPO_PUBLIC_APP_URL` e `EXPO_PUBLIC_LIVEKIT_URL`.
-3. Execute `npm install` dentro de `mobile`.
-4. Rode `npm run start` e abra no Android/Expo Go ou em emulador.
+1. Instale Node.js LTS e Android Studio ou Expo Go.
+2. No terminal, entre na pasta `mobile`.
+3. Execute `npm install --no-audit --no-fund`.
+4. Execute `npm run typecheck`.
+5. Execute `npx expo start`.
+6. Entre com a mesma conta usada no site.
 
-Nenhum segredo administrativo deve ser colocado no app. Tokens Mercado Pago, LiveKit secret e service role ficam no Supabase Functions.
+## APK standalone
+
+O repositório possui o workflow `Gerar APK de teste`, que executa `assembleRelease` e publica o APK como artefato do GitHub Actions.
+
+Para um teste real:
+1. baixe o APK release mais recente;
+2. instale no Android;
+3. teste login, feed, publicação, mensagens, IA, marketplace e causas;
+4. só depois promova a versão para produção/loja.
+
+Para build oficial de loja, use uma assinatura de produção e gere AAB.

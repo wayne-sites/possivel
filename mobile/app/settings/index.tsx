@@ -1,2 +1,6 @@
-import { Text } from 'react-native'; import { Card, Screen, Button, s } from '@/components/ui';
-export default function Settings(){return <Screen><Card><Text style={s.title}>Configurações</Text><Button title="Exportar dados"/><Button title="Excluir conta" variant="danger"/></Card></Screen>}
+import { Pressable, StyleSheet, Text } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { router } from 'expo-router';
+import { Card, Header, Screen, colors } from '@/components/ui';
+export default function SettingsScreen() { return <Screen scroll><Header title="Configurações" /><Card><Pressable style={styles.menu} onPress={() => router.push('/edit-profile')}><Ionicons name="person-outline" size={22} color={colors.primary} /><Text style={styles.text}>Editar perfil</Text><Ionicons name="chevron-forward" color={colors.muted} /></Pressable><Pressable style={styles.menu} onPress={() => router.push('/plans')}><Ionicons name="diamond-outline" size={22} color={colors.primary} /><Text style={styles.text}>Plano e assinatura</Text><Ionicons name="chevron-forward" color={colors.muted} /></Pressable><Pressable style={styles.menu} onPress={() => router.push('/settings/legal')}><Ionicons name="shield-checkmark-outline" size={22} color={colors.primary} /><Text style={styles.text}>Termos e privacidade</Text><Ionicons name="chevron-forward" color={colors.muted} /></Pressable></Card></Screen>; }
+const styles = StyleSheet.create({ menu: { minHeight: 56, flexDirection: 'row', alignItems: 'center', gap: 12, borderBottomWidth: 1, borderBottomColor: colors.border }, text: { color: colors.text, fontWeight: '700', flex: 1 } });

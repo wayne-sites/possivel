@@ -1,0 +1,221 @@
+:root {
+  --focus: #7a3ff2;
+  --glass: rgba(255, 253, 248, .78);
+  --ai-ink: #17141d;
+  --ai-violet: #7a3ff2;
+  --ai-pink: #f56b5d;
+}
+
+::selection {
+  background: rgba(245, 107, 93, .24);
+}
+
+body {
+  background:
+    radial-gradient(circle at 82% 6%, rgba(217, 210, 242, .62), transparent 28rem),
+    radial-gradient(circle at 10% 78%, rgba(217, 235, 230, .65), transparent 30rem),
+    var(--bg);
+  min-height: 100vh;
+}
+
+button,
+a,
+input,
+textarea,
+select {
+  transition: border-color .18s ease, box-shadow .18s ease, transform .18s ease, background .18s ease, opacity .18s ease;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible,
+[tabindex="0"]:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--focus) 62%, transparent);
+  outline-offset: 3px;
+}
+
+.topbar {
+  background: rgba(246, 241, 232, .82);
+  box-shadow: 0 10px 35px rgba(45, 38, 28, .05);
+}
+
+.post,
+.panel,
+.person-card,
+.listing-card,
+.cause-card,
+.plan-card {
+  transition: transform .22s ease, box-shadow .22s ease, border-color .22s ease;
+}
+
+.post:hover,
+.panel:hover,
+.person-card:hover,
+.listing-card:hover,
+.cause-card:hover,
+.plan-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 20px 52px rgba(34, 30, 24, .11);
+}
+
+.plan-card.pro {
+  position: relative;
+  overflow: hidden;
+  background:
+    linear-gradient(145deg, rgba(255, 253, 248, .98), rgba(244, 237, 255, .9));
+}
+
+.plan-card.pro::before {
+  content: "";
+  position: absolute;
+  width: 180px;
+  height: 180px;
+  right: -80px;
+  top: -95px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(122, 63, 242, .22), transparent 68%);
+  pointer-events: none;
+}
+
+.ai-top-button {
+  border: 1px solid rgba(122, 63, 242, .18);
+  border-radius: 999px;
+  padding: 10px 15px;
+  font-weight: 800;
+  color: var(--ai-ink);
+  background: linear-gradient(135deg, #eee8ff, #ffdcd7);
+  box-shadow: 0 8px 22px rgba(122, 63, 242, .1);
+}
+
+.ai-top-button:hover {
+  transform: translateY(-1px) scale(1.01);
+}
+
+.quick-grid [data-action="ai"] {
+  color: #251c39;
+  background:
+    radial-gradient(circle at 86% 18%, rgba(255, 255, 255, .72), transparent 5rem),
+    linear-gradient(135deg, #d9d2f2 0%, #f7d9d4 100%);
+  border: 1px solid rgba(122, 63, 242, .12);
+}
+
+.ai-dialog {
+  max-width: min(94vw, 760px);
+}
+
+.ai-card {
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(217, 210, 242, .82), transparent 20rem),
+    var(--paper);
+}
+
+.ai-card::before {
+  content: "✦";
+  position: absolute;
+  right: 26px;
+  top: 21px;
+  font-size: 34px;
+  color: var(--ai-violet);
+  opacity: .72;
+}
+
+.ai-header {
+  padding-right: 58px;
+}
+
+.ai-header h2 {
+  font-size: clamp(28px, 5vw, 42px);
+}
+
+.ai-header p {
+  color: var(--muted);
+  line-height: 1.55;
+  margin: 4px 0 0;
+}
+
+.ai-mode-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.ai-suggestion {
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, .62);
+  color: var(--ink);
+  border-radius: 999px;
+  padding: 8px 12px;
+  font-weight: 700;
+}
+
+.ai-suggestion:hover {
+  border-color: rgba(122, 63, 242, .34);
+  background: #f5f0ff;
+}
+
+#aiPrompt {
+  min-height: 132px;
+}
+
+.ai-result {
+  white-space: pre-wrap;
+  line-height: 1.62;
+  border: 1px solid rgba(122, 63, 242, .16);
+  border-radius: 16px;
+  padding: 18px;
+  background: linear-gradient(145deg, rgba(217, 210, 242, .35), rgba(217, 235, 230, .38));
+}
+
+.ai-status {
+  min-height: 20px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.security-note {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.5;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: #f4efe7;
+}
+
+@media (min-width: 1250px) {
+  .quick-grid {
+    grid-template-columns: repeat(5, 1fr);
+  }
+}
+
+@media (max-width: 760px) {
+  .ai-top-button {
+    padding: 9px 11px;
+  }
+
+  .ai-card {
+    border-radius: 20px 20px 0 0;
+  }
+
+  .ai-dialog {
+    margin: auto 0 0;
+    width: 100%;
+    max-width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition: none !important;
+    animation: none !important;
+  }
+}

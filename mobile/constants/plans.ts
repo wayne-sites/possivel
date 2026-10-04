@@ -1,4 +1,0 @@
-export type Plan = 'free' | 'pro';
-export const PLAN_LIMITS = {free:{activeListings:5,storageGb:1,callParticipants:4,callDurationMinutes:30},pro:{activeListings:50,storageGb:10,callParticipants:12,callDurationMinutes:120}} as const;
-export const PLAN_FEATURES = {free:['Cadastro e login','Feed, posts com fotos e vídeos','Curtidas, comentários e mensagens privadas','Projetos, campanhas e doações','Até 5 anúncios ativos','Estatísticas básicas','Chamadas com até 4 pessoas por 30 minutos','1 GB de armazenamento'],pro:['Tudo do gratuito','Até 50 anúncios ativos','10 GB de armazenamento','Estatísticas avançadas','Agendamento de publicações','Perfil avançado e selo PRO','Pesquisas e filtros salvos','Chamadas com até 12 pessoas por 2 horas','Sem anúncios internos e suporte prioritário']} as const;
-export const PRO_ONLY_FEATURES = ['advanced_stats','scheduled_posts','advanced_profile','saved_searches','ad_free','priority_support','performance_history'] as const;

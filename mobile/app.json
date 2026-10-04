@@ -1,1 +1,27 @@
-{"expo":{"name":"Possível","slug":"possivel","scheme":"possivel","version":"0.1.0","orientation":"portrait","userInterfaceStyle":"automatic","newArchEnabled":true,"ios":{"bundleIdentifier":"com.possivel.app"},"android":{"package":"com.possivel.app","permissions":["CAMERA","RECORD_AUDIO","READ_MEDIA_IMAGES","READ_MEDIA_VIDEO"]},"plugins":["expo-router","expo-secure-store","expo-image-picker"],"experiments":{"typedRoutes":true},"extra":{"router":{"origin":false}}}}
+{
+  "expo": {
+    "name": "Possível",
+    "slug": "possivel",
+    "scheme": "possivel",
+    "version": "0.4.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "ios": {
+      "bundleIdentifier": "com.possivel.app",
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSPhotoLibraryUsageDescription": "O Possível usa sua galeria para publicar fotos e vídeos.",
+        "NSCameraUsageDescription": "O Possível usa sua câmera para criar conteúdo.",
+        "NSMicrophoneUsageDescription": "O Possível usa seu microfone em chamadas de áudio e vídeo."
+      }
+    },
+    "android": {
+      "package": "com.possivel.app",
+      "permissions": ["CAMERA", "RECORD_AUDIO"]
+    },
+    "plugins": ["expo-router", "expo-image-picker"],
+    "experiments": {"typedRoutes": true},
+    "extra": {"router": {"origin": false}}
+  }
+}

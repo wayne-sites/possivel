@@ -1,2 +1,21 @@
-import { useState } from 'react'; import { Text, TextInput } from 'react-native'; import { Button, Card, Screen, s } from '@/components/ui'; import { resetPassword } from '@/services/auth';
-export default function Forgot(){const [email,setEmail]=useState(''),[msg,setMsg]=useState(''); return <Screen><Card><Text style={s.title}>Recuperar senha</Text><TextInput style={s.input} value={email} onChangeText={setEmail} placeholder="E-mail"/><Button title="Enviar link" onPress={async()=>{await resetPassword(email); setMsg('Enviamos um link de recuperação.')}}/><Text>{msg}</Text></Card></Screen>}
+import { useState } from 'react';
+import { Alert, StyleSheet, Text } from 'react-native';
+import { router } from 'expo-router';
+import { Button, Card, Input, Screen, colors, typography } from '@/components/ui';
+import { getErrorMessage, requestPasswordReset } from '@/services/app';
+
+export default function ForgotPasswordScreen() {
+  const [email, setEmail] = useState('');
+  const [loading, setLoading] = useState(false);
+  async function submit() {
+    setLoading(true);
+    try {
+      await requestPasswordReset(email);
+      Alert.alert('E-mail enviado', 'Abra o link recebido para redefinir sua senha.');
+    } catch (error) {
+      Alert.alert('Erro', getErrorMessage(error));
+    } finally { setLoading(false); }
+  }
+  return <Screen scroll><Text style={styles.title}>Recuperar senha</Text><Text style={typography.muted}>Enviaremos um link para o seu e-mail.</Text><Card><Input label="E-mail" value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" /><Button loading={loading} onPress={() => void submit()}>Enviar link</Button><Button variant="ghost" onPress={() => router.back()}>Voltar</Button></Card></Screen>;
+}
+const styles = StyleSheet.create({ title: { color: colors.text, fontSize: 30, fontWeight: '900', marginTop: 42 } });

@@ -10,6 +10,8 @@ function mapStatus(status?: string) {
 }
 
 Deno.serve(async (req) => {
+  if (req.method !== 'POST') return json({ error: 'Método não permitido' }, 405);
+
   const eventId = getMercadoPagoEventId(req.url);
   try {
     await validateMercadoPagoWebhookSignature({
@@ -20,7 +22,8 @@ Deno.serve(async (req) => {
     });
   } catch (error) {
     if (error instanceof InvalidWebhookSignatureError) return json({ error: error.message }, 401);
-    throw error;
+    console.error('payment webhook signature:', error);
+    return json({ error: 'Não foi possível validar o webhook.' }, 400);
   }
 
   const payload = await req.json().catch(() => ({}));
@@ -28,18 +31,39 @@ Deno.serve(async (req) => {
   if (!paymentId) return json({ error: 'Evento sem ID de pagamento' }, 400);
 
   const token = Deno.env.get('MERCADO_PAGO_ACCESS_TOKEN');
-  if (!token) return json({ error: 'MERCADO_PAGO_ACCESS_TOKEN não configurado' }, 500);
+  if (!token) return json({ error: 'Pagamento ainda não configurado.' }, 503);
 
-  const response = await fetch(`https://api.mercadopago.com/v1/payments/${paymentId}`, {
+  const response = await fetch(`https://api.mercadopago.com/v1/payments/${encodeURIComponent(paymentId)}`, {
     headers: { Authorization: `Bearer ${token}` },
   });
-  if (!response.ok) return json({ error: await response.text() }, 502);
+  if (!response.ok) {
+    console.error('mercadopago payment lookup:', response.status, await response.text());
+    return json({ error: 'Não foi possível confirmar o pagamento no provedor.' }, 502);
+  }
   const providerPayment = await response.json();
 
   const internalId = Number(providerPayment.external_reference);
-  if (!Number.isFinite(internalId)) return json({ error: 'external_reference inválida' }, 400);
+  if (!Number.isSafeInteger(internalId) || internalId <= 0) return json({ error: 'Referência de pagamento inválida.' }, 400);
 
   const db = admin();
+  const { data: internal, error: internalError } = await db
+    .from('payments')
+    .select('id,payer_id,amount,purpose,status,provider')
+    .eq('id', internalId)
+    .maybeSingle();
+  if (internalError) return json({ error: 'Não foi possível validar o pagamento interno.' }, 400);
+  if (!internal) return json({ error: 'Pagamento interno não encontrado.' }, 404);
+  if (internal.provider !== 'mercadopago') return json({ error: 'Provedor de pagamento divergente.' }, 409);
+
+  const providerAmount = Number(providerPayment.transaction_amount);
+  const expectedAmount = Number(internal.amount);
+  const currency = String(providerPayment.currency_id ?? '');
+  if (!Number.isFinite(providerAmount) || Math.abs(providerAmount - expectedAmount) > 0.005 || currency !== 'BRL') {
+    console.error('payment integrity mismatch:', { internalId, providerAmount, expectedAmount, currency });
+    return json({ error: 'Os dados do pagamento não correspondem ao checkout registrado.' }, 409);
+  }
+
+  const status = mapStatus(providerPayment.status);
   const eventKey = `payment:${paymentId}:${providerPayment.status}`;
   const { error: eventError } = await db.from('payment_webhook_events').insert({
     provider: 'mercadopago',
@@ -48,15 +72,14 @@ Deno.serve(async (req) => {
     payload: providerPayment,
   });
   if (eventError?.code === '23505') return json({ ok: true, duplicate: true });
-  if (eventError) return json({ error: eventError.message }, 400);
+  if (eventError) return json({ error: 'Não foi possível registrar o evento de pagamento.' }, 400);
 
-  const status = mapStatus(providerPayment.status);
   const { data: updated, error: updateError } = await db.from('payments').update({
     status,
     provider_reference: String(paymentId),
     updated_at: new Date().toISOString(),
-  }).eq('id', internalId).select('id,payer_id,purpose').maybeSingle();
-  if (updateError) return json({ error: updateError.message }, 400);
+  }).eq('id', internalId).eq('provider', 'mercadopago').select('id,payer_id,purpose').maybeSingle();
+  if (updateError) return json({ error: 'Não foi possível atualizar o pagamento.' }, 400);
 
   if (updated?.payer_id) {
     await db.from('notifications').insert({

@@ -5,12 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="description" content="Possível — comunidade para criar, trocar, ajudar e conectar pessoas." />
   <meta name="theme-color" content="#f6f1e8" />
+  <meta name="referrer" content="strict-origin-when-cross-origin" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob: https:; media-src 'self' blob: https:; connect-src 'self' https://nwymsiuwiqyvvmdagzeg.supabase.co wss://nwymsiuwiqyvvmdagzeg.supabase.co; frame-src https://*.daily.co; upgrade-insecure-requests" />
   <title>Possível</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Syne:wght@600;700;800&display=swap" rel="stylesheet" />
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 64 64%22><circle cx=%2232%22 cy=%2232%22 r=%2228%22 fill=%22%23f56b5d%22/><text x=%2232%22 y=%2243%22 text-anchor=%22middle%22 font-size=%2236%22 font-family=%22Arial%22 fill=%22white%22>p</text></svg>" />
   <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="enhancements.css" />
 </head>
 <body>
   <noscript>Ative o JavaScript para usar o Possível.</noscript>
@@ -39,6 +42,7 @@
       <header class="topbar">
         <button class="mobile-menu" id="mobileMenu" aria-label="Abrir menu">☰</button>
         <div class="search-wrap"><span>⌕</span><input id="searchInput" type="search" placeholder="Buscar posts, pessoas e anúncios" /></div>
+        <button class="ai-top-button" id="aiTopButton" type="button" aria-label="Abrir Possível IA">✦ IA</button>
         <button class="icon-button" id="notificationButton" aria-label="Notificações">♢<b id="notificationBadge" hidden></b></button>
         <button class="account-button" id="accountButton">Entrar</button>
         <button class="primary-button" id="newButton">＋ Criar</button>
@@ -54,6 +58,7 @@
           <button data-action="video"><span>▶</span><strong>Postar vídeo</strong><small>mostre o que você faz</small></button>
           <button data-action="call"><span>◉</span><strong>Fazer chamada</strong><small>áudio ou vídeo</small></button>
           <button data-action="donation"><span>♡</span><strong>Apoiar causa</strong><small>contribua com segurança</small></button>
+          <button data-action="ai"><span>✦</span><strong>Mapa do Possível</strong><small>transforme uma ideia em próximos passos</small></button>
         </section>
         <div class="dashboard-grid">
           <section>
@@ -73,7 +78,7 @@
       <section class="view" data-view-panel="messages"><div class="page-head"><div><p class="section-kicker">conversas privadas</p><h1>Mensagens</h1></div></div><div class="messages-layout"><aside id="messageRecipients" class="recipient-list"></aside><section class="thread-panel"><div id="threadHeader" class="thread-header">Escolha uma pessoa</div><div id="messageThread" class="message-thread"></div><form id="messageForm" class="message-form"><input id="messageText" maxlength="2000" placeholder="Escreva uma mensagem" autocomplete="off" /><button class="primary-button">Enviar</button></form></section></div></section>
       <section class="view" data-view-panel="market"><div class="page-head"><div><p class="section-kicker">compra, venda e troca</p><h1>Mercado</h1></div><button class="primary-button" id="newListingButton">＋ Publicar anúncio</button></div><div id="marketList" class="card-grid"></div></section>
       <section class="view" data-view-panel="causes"><div class="page-head"><div><p class="section-kicker">impacto social</p><h1>Causas e projetos</h1></div><button class="primary-button" id="newCauseButton">＋ Criar causa</button></div><div id="causesList" class="card-grid"></div></section>
-      <section class="view" data-view-panel="plans"><div class="page-head"><div><p class="section-kicker">possível pro</p><h1>Planos</h1></div><span id="currentPlanBadge" class="plan-badge">Free</span></div><div class="plans-grid"><article class="plan-card"><h2>Free</h2><strong>R$ 0</strong><ul><li>5 anúncios ativos</li><li>1 GB de mídia</li><li>Chamadas com até 4 pessoas por 30 min</li><li>Feed, mensagens e causas</li></ul></article><article class="plan-card pro"><span class="plan-badge">PRO</span><h2>Possível Pro</h2><strong id="proPrice">Configure o preço no Mercado Pago</strong><ul><li>50 anúncios ativos</li><li>10 GB de mídia</li><li>Chamadas com até 12 pessoas por 120 min</li><li>Estatísticas avançadas</li><li>Agendamento, customização e filtros salvos</li><li>Selo PRO e sem anúncios</li></ul><button class="primary-button" id="upgradeButton">Assinar Possível Pro</button></article></div></section>
+      <section class="view" data-view-panel="plans"><div class="page-head"><div><p class="section-kicker">possível pro</p><h1>Planos</h1></div><span id="currentPlanBadge" class="plan-badge">Free</span></div><div class="plans-grid"><article class="plan-card"><h2>Free</h2><strong>R$ 0</strong><ul><li>5 anúncios ativos</li><li>1 GB de mídia</li><li>Chamadas com até 4 pessoas por 30 min</li><li>5 usos da Possível IA por dia</li><li>Feed, mensagens e causas</li></ul></article><article class="plan-card pro"><span class="plan-badge">PRO</span><h2>Possível Pro</h2><strong id="proPrice">R$ 29,99/mês</strong><ul><li>50 anúncios ativos</li><li>10 GB de mídia</li><li>Chamadas com até 12 pessoas por 120 min</li><li>100 usos da Possível IA por dia</li><li>Estatísticas avançadas</li><li>Agendamento, customização e filtros salvos</li><li>Selo PRO e sem anúncios</li></ul><button class="primary-button" id="upgradeButton">Assinar Possível Pro</button></article></div></section>
     </main>
   </div>
 
@@ -87,11 +92,11 @@
 
   <dialog id="commentsDialog"><section class="dialog-card"><button type="button" class="dialog-close" data-close>×</button><p class="section-kicker">conversa</p><h2>Comentários</h2><div id="commentsList" class="comments-list"></div><form id="commentsForm" class="comment-form"><textarea id="commentText" required maxlength="1000" placeholder="Escreva um comentário"></textarea><button class="primary-button">Comentar</button></form></section></dialog>
 
-  <dialog id="listingDialog"><form id="listingForm" class="dialog-card"><button type="button" class="dialog-close" data-close>×</button><p class="section-kicker">mercado</p><h2>Publicar anúncio</h2><label>Tipo<select id="listingType"><option value="venda">Venda</option><option value="troca">Troca</option></select></label><label>Título<input id="listingTitle" required maxlength="100"></label><label>Descrição<textarea id="listingDescription" maxlength="2000"></textarea></label><label>Preço<input id="listingPrice" type="number" min="0" step="0.01"></label><label>Localização<input id="listingLocation" required maxlength="120"></label><label>Imagem<input id="listingImage" type="file" accept="image/jpeg,image/png,image/webp"></label><p class="form-error" id="listingError"></p><button class="primary-button">Publicar</button></form></dialog>
+  <dialog id="listingDialog"><form id="listingForm" class="dialog-card"><button type="button" class="dialog-close" data-close>×</button><p class="section-kicker">mercado</p><h2>Publicar anúncio</h2><label>Tipo<select id="listingType"><option value="venda">Venda</option><option value="troca">Troca</option></select></label><label>Título<input id="listingTitle" required maxlength="100"></label><label>Descrição<textarea id="listingDescription" maxlength="2000"></textarea></label><label>Preço<input id="listingPrice" type="number" min="1" step="0.01"></label><label>Localização<input id="listingLocation" required maxlength="120"></label><label>Imagem<input id="listingImage" type="file" accept="image/jpeg,image/png,image/webp"></label><p class="form-error" id="listingError"></p><button class="primary-button">Publicar</button></form></dialog>
 
   <dialog id="causeDialog"><form id="causeForm" class="dialog-card"><button type="button" class="dialog-close" data-close>×</button><p class="section-kicker">causa</p><h2>Criar causa</h2><label>Título<input id="causeTitle" required maxlength="120"></label><label>Descrição<textarea id="causeDescription" required maxlength="3000"></textarea></label><label>Meta em reais<input id="causeGoal" type="number" min="1" step="0.01" required></label><label>Imagem<input id="causeImage" type="file" accept="image/jpeg,image/png,image/webp"></label><p class="form-error" id="causeError"></p><button class="primary-button">Criar causa</button></form></dialog>
 
-  <dialog id="paymentDialog"><form id="paymentForm" class="dialog-card"><button type="button" class="dialog-close" data-close>×</button><p class="section-kicker">contribuição</p><h2 id="paymentTitle">Apoiar causa</h2><label>Valor<input id="paymentAmount" type="number" min="1" step="0.01" required></label><label>Forma<select id="paymentProvider"><option value="mercadopago">Mercado Pago</option><option value="pix">Pix</option></select></label><p class="form-note">O pagamento real depende da Edge Function e das credenciais do provedor.</p><p class="form-error" id="paymentError"></p><button class="primary-button">Continuar</button></form></dialog>
+  <dialog id="paymentDialog"><form id="paymentForm" class="dialog-card"><button type="button" class="dialog-close" data-close>×</button><p class="section-kicker">contribuição</p><h2 id="paymentTitle">Apoiar causa</h2><label>Valor<input id="paymentAmount" type="number" min="1" max="100000" step="0.01" required></label><label>Forma<select id="paymentProvider"><option value="mercadopago">Mercado Pago (Pix/cartão, conforme disponível)</option></select></label><p class="form-note">O valor e o item são validados novamente no servidor antes de abrir o checkout.</p><p class="form-error" id="paymentError"></p><button class="primary-button">Continuar</button></form></dialog>
 
   <dialog id="callDialog"><section class="dialog-card"><button type="button" class="dialog-close" data-close>×</button><p class="section-kicker">chamada</p><h2>Áudio ou vídeo</h2><div class="tabs"><button type="button" class="active" data-call-mode="video">Vídeo</button><button type="button" data-call-mode="audio">Áudio</button></div><video id="localVideo" autoplay muted playsinline></video><p id="callNote" class="form-note">Escolha uma pessoa em Conexões ou Mensagens para iniciar.</p><button class="primary-button" id="startCallButton">Criar sala</button></section></dialog>
 
@@ -99,10 +104,44 @@
 
   <dialog id="reportDialog"><form id="reportForm" class="dialog-card"><button type="button" class="dialog-close" data-close>×</button><p class="section-kicker">segurança</p><h2>Denunciar publicação</h2><label>Motivo<select id="reportReason"><option value="spam">Spam ou golpe</option><option value="harassment">Assédio</option><option value="violence">Violência</option><option value="illegal">Conteúdo ilegal</option><option value="other">Outro</option></select></label><label>Detalhes<textarea id="reportDetails" maxlength="2000"></textarea></label><p class="form-error" id="reportError"></p><button class="primary-button">Enviar denúncia</button></form></dialog>
 
-  <dialog id="resetPasswordDialog"><form id="resetPasswordForm" class="dialog-card"><button type="button" class="dialog-close" data-close>×</button><p class="section-kicker">segurança</p><h2>Definir nova senha</h2><label>Nova senha<input id="newPassword" type="password" minlength="6" required></label><p class="form-error" id="resetPasswordError"></p><button class="primary-button">Salvar nova senha</button></form></dialog>
+  <dialog id="resetPasswordDialog"><form id="resetPasswordForm" class="dialog-card"><button type="button" class="dialog-close" data-close>×</button><p class="section-kicker">segurança</p><h2>Definir nova senha</h2><label>Nova senha<input id="newPassword" type="password" minlength="8" required autocomplete="new-password"></label><p class="form-error" id="resetPasswordError"></p><button class="primary-button">Salvar nova senha</button></form></dialog>
+
+  <dialog id="aiDialog" class="ai-dialog">
+    <form id="aiForm" class="dialog-card ai-card">
+      <button type="button" class="dialog-close" id="aiClose" aria-label="Fechar Possível IA">×</button>
+      <header class="ai-header">
+        <p class="section-kicker">possível ia · mapa do possível</p>
+        <h2>Da ideia ao próximo passo.</h2>
+        <p>Use a IA para criar um caminho, melhorar uma publicação, estruturar um anúncio, planejar uma causa ou revisar segurança.</p>
+      </header>
+      <label>Modo
+        <select id="aiMode">
+          <option value="path">Mapa do Possível</option>
+          <option value="post">Melhorar publicação</option>
+          <option value="listing">Criar anúncio</option>
+          <option value="cause">Estruturar causa</option>
+          <option value="safety">Revisar segurança</option>
+        </select>
+      </label>
+      <div class="ai-mode-grid" aria-label="Sugestões rápidas">
+        <button type="button" class="ai-suggestion" data-mode="path" data-prompt="Quero transformar uma ideia em um projeto real. Monte meus próximos passos.">Planejar ideia</button>
+        <button type="button" class="ai-suggestion" data-mode="post" data-prompt="Quero escrever uma publicação clara sobre: ">Criar post</button>
+        <button type="button" class="ai-suggestion" data-mode="listing" data-prompt="Quero anunciar este item com transparência: ">Criar anúncio</button>
+        <button type="button" class="ai-suggestion" data-mode="safety" data-prompt="Revise a segurança desta situação e me diga quais sinais de risco observar: ">Checar risco</button>
+      </div>
+      <label>O que você quer tornar possível?
+        <textarea id="aiPrompt" maxlength="2000" required placeholder="Ex.: quero começar um projeto, mas não sei qual deve ser meu primeiro passo."></textarea>
+      </label>
+      <div class="security-note"><span>◈</span><span>Não envie senhas, tokens, chaves privadas, códigos de recuperação ou documentos sensíveis para a IA.</span></div>
+      <p class="ai-status" id="aiStatus" aria-live="polite"></p>
+      <output class="ai-result" id="aiResult" aria-live="polite" hidden></output>
+      <button class="primary-button" id="aiSubmit" type="submit">Transformar com IA</button>
+    </form>
+  </dialog>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase-config.js"></script>
   <script src="script.js"></script>
+  <script src="enhancements.js"></script>
 </body>
 </html>

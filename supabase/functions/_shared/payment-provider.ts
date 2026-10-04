@@ -1,8 +1,15 @@
 import { getMercadoPagoEventId, validateMercadoPagoWebhookSignature } from './webhook-signature.ts';
+import { PRO_MONTHLY_PRICE_BRL } from './plans.ts';
 
 export type CheckoutInput = { userId: string; email?: string; plan: 'pro' };
-export type CheckoutResult = { checkoutUrl: string; providerSubscriptionId?: string };
-export type SubscriptionData = { id: string; status: string; external_reference?: string };
+export type CheckoutResult = { checkoutUrl: string; providerSubscriptionId: string };
+export type SubscriptionData = {
+  id: string;
+  status: string;
+  external_reference?: string;
+  next_payment_date?: string;
+  date_created?: string;
+};
 export type WebhookEvent = { id: string; type: string; providerSubscriptionId?: string; status?: string; payload: unknown };
 
 export interface PaymentProvider {
@@ -17,14 +24,19 @@ function env(name: string) {
 }
 
 export class MercadoPagoProvider implements PaymentProvider {
-  private token = env('MERCADO_PAGO_ACCESS_TOKEN')!;
   private base = 'https://api.mercadopago.com';
 
+  private token() {
+    const token = env('MERCADO_PAGO_ACCESS_TOKEN');
+    if (!token) throw new Error('MERCADO_PAGO_ACCESS_TOKEN não configurado');
+    return token;
+  }
+
   async createCheckoutSession(input: CheckoutInput) {
-    const appUrl = env('APP_URL') ?? 'possivel://subscription/manage';
+    const appUrl = env('APP_URL') ?? 'https://possivel2026.github.io/possivel/';
     const res = await fetch(`${this.base}/preapproval`, {
       method: 'POST',
-      headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json' },
+      headers: { authorization: `Bearer ${this.token()}`, 'content-type': 'application/json' },
       body: JSON.stringify({
         reason: 'Possível Pro',
         external_reference: input.userId,
@@ -32,7 +44,7 @@ export class MercadoPagoProvider implements PaymentProvider {
         auto_recurring: {
           frequency: 1,
           frequency_type: 'months',
-          transaction_amount: Number(env('POSSIVEL_PRO_PRICE') ?? 19.9),
+          transaction_amount: PRO_MONTHLY_PRICE_BRL,
           currency_id: 'BRL',
         },
         back_url: appUrl,
@@ -40,27 +52,47 @@ export class MercadoPagoProvider implements PaymentProvider {
       }),
     });
 
-    if (!res.ok) throw new Error(await res.text());
+    if (!res.ok) {
+      console.error('mercadopago preapproval:', res.status, await res.text());
+      throw new Error('O Mercado Pago não conseguiu iniciar a assinatura.');
+    }
 
     const data = await res.json();
-    return { checkoutUrl: data.init_point ?? data.sandbox_init_point, providerSubscriptionId: data.id };
+    const checkoutUrl = data.init_point ?? data.sandbox_init_point;
+    const providerSubscriptionId = data.id;
+    if (!checkoutUrl || !providerSubscriptionId) throw new Error('O provedor não retornou os dados da assinatura.');
+    return { checkoutUrl: String(checkoutUrl), providerSubscriptionId: String(providerSubscriptionId) };
   }
 
   async cancelSubscription(id: string) {
-    const res = await fetch(`${this.base}/preapproval/${id}`, {
+    const res = await fetch(`${this.base}/preapproval/${encodeURIComponent(id)}`, {
       method: 'PUT',
-      headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json' },
+      headers: { authorization: `Bearer ${this.token()}`, 'content-type': 'application/json' },
       body: JSON.stringify({ status: 'cancelled' }),
     });
 
-    if (!res.ok) throw new Error(await res.text());
+    if (!res.ok) {
+      console.error('mercadopago cancel:', res.status, await res.text());
+      throw new Error('Não foi possível cancelar a assinatura no provedor.');
+    }
   }
 
   async getSubscription(id: string) {
-    const res = await fetch(`${this.base}/preapproval/${id}`, { headers: { authorization: `Bearer ${this.token}` } });
-    if (!res.ok) throw new Error(await res.text());
+    const res = await fetch(`${this.base}/preapproval/${encodeURIComponent(id)}`, {
+      headers: { authorization: `Bearer ${this.token()}` },
+    });
+    if (!res.ok) {
+      console.error('mercadopago subscription:', res.status, await res.text());
+      throw new Error('Não foi possível consultar a assinatura no provedor.');
+    }
     const data = await res.json();
-    return { id: data.id, status: data.status, external_reference: data.external_reference };
+    return {
+      id: String(data.id),
+      status: String(data.status),
+      external_reference: data.external_reference ? String(data.external_reference) : undefined,
+      next_payment_date: data.next_payment_date ? String(data.next_payment_date) : undefined,
+      date_created: data.date_created ? String(data.date_created) : undefined,
+    };
   }
 
   async validateWebhook(request: Request) {

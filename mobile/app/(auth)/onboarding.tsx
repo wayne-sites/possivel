@@ -1,2 +1,0 @@
-import { router } from 'expo-router'; import { Text } from 'react-native'; import { Button, Card, Screen, s } from '@/components/ui';
-export default function Onboarding(){return <Screen><Card><Text style={s.title}>Tudo começa aqui</Text><Text style={s.muted}>Publique, venda, troque, doe, converse e participe de projetos reais com a mesma conta do site.</Text><Button title="Entrar" onPress={()=>router.push('/(auth)/login')}/><Button title="Criar conta" variant="secondary" onPress={()=>router.push('/(auth)/signup')}/></Card></Screen>}

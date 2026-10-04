@@ -1,0 +1,59 @@
+name: Gerar APK de teste
+
+on:
+  push:
+    branches: [codex/finalizar-app-mobile]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-apk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Baixar o projeto
+        uses: actions/checkout@v4
+
+      - name: Preparar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.13.1
+          cache: npm
+          cache-dependency-path: mobile/package.json
+
+      - name: Preparar Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Preparar Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Instalar dependências
+        working-directory: mobile
+        run: npm install --no-audit --no-fund
+
+      - name: Verificar compatibilidade Expo
+        working-directory: mobile
+        run: npx expo install --check
+
+      - name: Gerar projeto Android nativo
+        working-directory: mobile
+        run: npx expo prebuild --platform android --clean --no-install
+
+      - name: Compilar APK standalone
+        working-directory: mobile/android
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleRelease --no-daemon
+
+      - name: Publicar APK como artefato
+        uses: actions/upload-artifact@v4
+        with:
+          name: Possivel-Android-standalone
+          path: mobile/android/app/build/outputs/apk/release/app-release.apk
+          if-no-files-found: error
+          retention-days: 14
