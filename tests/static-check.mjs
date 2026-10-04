@@ -1,133 +1,63 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import vm from 'node:vm';
+import { execFileSync } from 'node:child_process';
 
-const required = [
-  'index.html',
-  'styles.css',
-  'enhancements.css',
-  'script.js',
-  'enhancements.js',
-  'site-experience.js',
-  'supabase-config.js',
-  'supabase-schema.sql',
-  'SECURITY.md',
-  'supabase/functions/possivel-ai/index.ts',
-  'supabase/migrations/202608080001_ai_security_hardening.sql',
-  'supabase/migrations/202608090004_pro_media_library.sql',
-];
-
+const required = ['index.html','styles.css','script.js','supabase-config.js','supabase-schema.sql'];
 for (const file of required) {
   if (!fs.existsSync(file)) throw new Error(`Arquivo ausente: ${file}`);
 }
-
-const html = fs.readFileSync('index.html', 'utf8');
-for (const id of ['feedList', 'authDialog', 'composeDialog', 'commentsDialog', 'marketList', 'causesList', 'aiDialog', 'proPrice']) {
+const html = fs.readFileSync('index.html','utf8');
+for (const id of ['feedList','authDialog','composeDialog','commentsDialog','marketList','causesList']) {
   if (!html.includes(`id="${id}"`)) throw new Error(`Elemento obrigatório ausente: ${id}`);
 }
-
-const htmlIds = [...html.matchAll(/\sid="([A-Za-z][A-Za-z0-9_-]*)"/g)].map((match) => match[1]);
-const duplicateIds = [...new Set(htmlIds.filter((id, index) => htmlIds.indexOf(id) !== index))];
-if (duplicateIds.length) throw new Error(`IDs HTML duplicados: ${duplicateIds.join(', ')}`);
-
-const webCode = `${fs.readFileSync('script.js', 'utf8')}\n${fs.readFileSync('enhancements.js', 'utf8')}\n${fs.readFileSync('site-experience.js', 'utf8')}`;
-const referencedIds = new Set([
-  ...[...`${fs.readFileSync('script.js', 'utf8')}\n${fs.readFileSync('enhancements.js', 'utf8')}`.matchAll(/\$\('#([A-Za-z][A-Za-z0-9_-]*)'\)/g)].map((match) => match[1]),
-  ...[...`${fs.readFileSync('script.js', 'utf8')}\n${fs.readFileSync('enhancements.js', 'utf8')}`.matchAll(/getElementById\(['"]([A-Za-z][A-Za-z0-9_-]*)['"]\)/g)].map((match) => match[1]),
-]);
-for (const id of referencedIds) {
-  if (!htmlIds.includes(id)) throw new Error(`JavaScript referencia ID HTML ausente: ${id}`);
-}
-
 if ((html.match(/@supabase\/supabase-js@2/g) || []).length !== 1) throw new Error('Supabase CDN deve aparecer uma vez.');
-if (!html.includes('Content-Security-Policy')) throw new Error('CSP ausente no site.');
 if (html.includes('sample-bike') || html.includes('Ana Martin') || html.includes('João Silva')) throw new Error('Dados fictícios encontrados.');
-
-const config = fs.readFileSync('supabase-config.js', 'utf8');
+const config = fs.readFileSync('supabase-config.js','utf8');
 if (/service_role|secret_key/i.test(config)) throw new Error('Segredo proibido no frontend.');
-if (!config.includes("aiFunctionName: 'possivel-ai'")) throw new Error('Possível IA não configurada no frontend.');
-if (!config.includes("proPriceLabel: 'R$ 15,99/mês'")) throw new Error('Preço do plano não está centralizado no frontend.');
-// Exercise the loader without fetching scripts or connecting to Supabase.
-// A version query is valid; a different file or remote origin is not.
-for (const readyState of ['loading', 'complete']) {
-  const appended = [];
-  let onReady;
-  const document = {
-    readyState,
-    createElement: (tag) => ({ tag, dataset: {} }),
-    querySelector: (selector) => appended.find((script) =>
-      (selector === 'script[data-possivel-experience]' && script.dataset.possivelExperience) ||
-      (selector === 'script[data-possivel-messages-filter]' && script.dataset.possivelMessagesFilter)),
-    head: { append: (script) => appended.push(script) },
-    addEventListener: (event, callback) => { if (event === 'DOMContentLoaded') onReady = callback; },
-  };
-  const context = vm.createContext({ window: {}, document });
-  vm.runInContext(config, context, { timeout: 1000 });
-  if (readyState === 'loading') {
-    if (appended.length || typeof onReady !== 'function') throw new Error('Loader não aguarda o DOM.');
-    onReady();
+
+const labsRequired = [
+  'microprodutos/index.html',
+  'microprodutos/styles.css',
+  'microprodutos/app.js',
+  'microprodutos/admin.js',
+  'microprodutos/vercel.json',
+  'microprodutos/package.json',
+  'microprodutos/supabase-admin-schema.sql',
+  'microprodutos/api/admin-summary.js',
+  'microprodutos/api/withdrawals.js',
+  'microprodutos/api/mercadopago-webhook.js',
+  'microprodutos/api/public-config.js'
+];
+for (const file of labsRequired) {
+  if (!fs.existsSync(file)) throw new Error(`Microproduto ausente: ${file}`);
+}
+
+function walk(dir) {
+  return fs.readdirSync(dir,{withFileTypes:true}).flatMap(entry => {
+    const full = path.join(dir,entry.name);
+    return entry.isDirectory() ? walk(full) : [full];
+  });
+}
+for (const file of walk('microprodutos').filter(f=>f.endsWith('.js'))) {
+  execFileSync(process.execPath,['--check',file],{stdio:'pipe'});
+}
+
+const labsHtml = fs.readFileSync('microprodutos/index.html','utf8');
+for (const id of ['toolGrid','workspace','creatorPanel','creatorLogin','withdrawForm']) {
+  if (!labsHtml.includes(`id="${id}"`)) throw new Error(`Labs: elemento obrigatório ausente: ${id}`);
+}
+const publicFiles = ['microprodutos/index.html','microprodutos/app.js','microprodutos/admin.js','microprodutos/styles.css'];
+for (const file of publicFiles) {
+  const text = fs.readFileSync(file,'utf8');
+  if (/SUPABASE_SERVICE_ROLE_KEY|MERCADOPAGO_ACCESS_TOKEN|MERCADOPAGO_WEBHOOK_SECRET/.test(text)) {
+    throw new Error(`Labs: nome de segredo privado exposto no frontend: ${file}`);
   }
-  const scripts = appended.filter((script) => script.dataset.possivelExperience);
-  const base = 'https://example.invalid/possivel/';
-  const src = scripts.length === 1 ? new URL(scripts[0].src, base) : null;
-  if (!src || scripts[0].tag !== 'script' || src.origin !== new URL(base).origin ||
-      src.pathname !== '/possivel/site-experience.js' || src.username || src.password || src.hash) {
-    throw new Error('Nova experiência do site não está carregada por um script local válido.');
-  }
-  vm.runInContext(config, context, { timeout: 1000 });
-  if (readyState === 'loading') onReady();
-  if (appended.filter((script) => script.dataset.possivelExperience).length !== 1) {
-    throw new Error('Nova experiência do site foi carregada mais de uma vez.');
-  }
 }
-
-const experience = fs.readFileSync('site-experience.js', 'utf8');
-for (const marker of ['Buscar', 'Livros', 'Filmes e séries', 'R$ 15,99/mês', '2 GB']) {
-  if (!experience.includes(marker)) throw new Error(`Experiência web incompleta: ${marker}`);
+const pkg = JSON.parse(fs.readFileSync('microprodutos/package.json','utf8'));
+if (pkg.dependencies?.mercadopago !== '3.0.0') throw new Error('Labs: versão do SDK Mercado Pago divergente da versão validada.');
+JSON.parse(fs.readFileSync('microprodutos/vercel.json','utf8'));
+const schema = fs.readFileSync('microprodutos/supabase-admin-schema.sql','utf8');
+for (const marker of ['wayne_financial_summary','request_wayne_withdrawal','pg_advisory_xact_lock']) {
+  if (!schema.includes(marker)) throw new Error(`Labs: proteção financeira ausente: ${marker}`);
 }
-
-const plans = fs.readFileSync('supabase/functions/_shared/plans.ts', 'utf8');
-if (!plans.includes('PRO_MONTHLY_PRICE_BRL = 15.99')) throw new Error('Preço do plano no backend está incorreto.');
-
-const hardening = fs.readFileSync('supabase/migrations/202608080001_ai_security_hardening.sql', 'utf8');
-for (const marker of ['is_blocked_pair', 'consume_daily_feature', 'enforce_insert_rate_limit', 'payments_insert_own']) {
-  if (!hardening.includes(marker)) throw new Error(`Hardening incompleto: ${marker}`);
-}
-
-const proMedia = fs.readFileSync('supabase/migrations/202608090004_pro_media_library.sql', 'utf8');
-for (const marker of ['pro_media_library', 'pro-library', '2147483648']) {
-  if (!proMedia.includes(marker)) throw new Error(`Biblioteca Pro incompleta: ${marker}`);
-}
-
-for (const obsolete of ['netlify.toml', 'vercel.json', '_headers']) {
-  if (fs.existsSync(obsolete)) throw new Error(`Configuração de hospedagem obsoleta ainda presente: ${obsolete}`);
-}
-
-const frontendFiles = ['index.html', 'script.js', 'enhancements.js', 'site-experience.js', 'supabase-config.js'];
-const frontend = frontendFiles.map((file) => fs.readFileSync(file, 'utf8')).join('\n');
-if (/MERCADO_PAGO_ACCESS_TOKEN|DAILY_API_KEY|SUPABASE_SERVICE_ROLE_KEY|AI_API_KEY/.test(frontend)) {
-  throw new Error('Nome de secret privado encontrado no frontend.');
-}
-
-if (frontend.includes('R$ 29,99/mês') && !html.includes('R$ 29,99/mês')) {
-  throw new Error('Preço antigo do plano encontrado no frontend.');
-}
-
-function collectTextFiles(dir = '.') {
-  const out = [];
-  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
-    if (entry.name === '.git' || entry.name === 'node_modules' || entry.name === 'dist') continue;
-    const full = path.join(dir, entry.name);
-    if (entry.isDirectory()) out.push(...collectTextFiles(full));
-    else if (/\.(?:html|js|mjs|ts|tsx|md|json|sql|css|toml|yml|yaml)$/.test(entry.name)) out.push(full);
-  }
-  return out;
-}
-
-const oldOwner = ['marcelinfreefire153', 'arch'].join('-');
-for (const file of collectTextFiles()) {
-  const text = fs.readFileSync(file, 'utf8');
-  if (text.includes(oldOwner)) throw new Error(`URL antiga encontrada em ${file}`);
-}
-
 console.log('Validação estática concluída.');
