@@ -63,6 +63,7 @@ window.POSSIVEL_SUPABASE = {
         validatedAccessToken = null;
         return { data: { session: null }, error: null };
       } catch (error) {
+        // Em falha de rede, preserva a sessão e deixa o app tentar normalmente.
         return result;
       }
     }
